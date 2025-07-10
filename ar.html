@@ -105,7 +105,7 @@ btn.addEventListener('click', async () => {
     const data = await res.json();
     const imageUrl = data.secure_url;
     const encoded = encodeURIComponent(imageUrl);
-    const arUrl = `https://yu9ma0.github.io/sotuken/ar.html?img=${encoded}`;
+    const arUrl = `https://yu9ma0.github.io/sotuken/ar_award.html?img=${encoded}`;
     document.getElementById('result').innerHTML = `
       <p><strong>撮影ページURL:</strong></p>
       <input type="text" value="${arUrl}" readonly onclick="this.select()" style="width:100%; padding:0.5rem;" />
