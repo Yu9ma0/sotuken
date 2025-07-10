@@ -1,0 +1,56 @@
+<!-- create.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Friend Awards - 表彰状作成</title>
+  <style>
+    body { max-width: 600px; margin: 40px auto; font-family: sans-serif; }
+    label { display: block; margin-top: 20px; font-weight: bold; }
+    input, textarea { width: 100%; padding: 8px; margin-top: 6px; }
+    button { margin-top: 20px; padding: 10px 20px; font-size: 1rem; }
+    #shareLink { margin-top: 10px; word-break: break-all; }
+  </style>
+</head>
+<body>
+
+  <h1>Friend Awards 表彰状作成</h1>
+
+  <label>賞状タイトル</label>
+  <input id="title" placeholder="例: 久しぶりの再会賞" />
+
+  <label>受け取る人の名前</label>
+  <input id="to" placeholder="例: 山田 太郎" />
+
+  <label>送る人の名前</label>
+  <input id="from" placeholder="例: 鈴木 花子" />
+
+  <label>メッセージ</label>
+  <textarea id="msg" placeholder="例: また会えて嬉しい！これからもよろしくね。"></textarea>
+
+  <button id="generateBtn">共有リンクを作成</button>
+  <p><strong>リンク:</strong></p>
+  <input type="text" id="shareLink" readonly />
+
+  <script>
+   document.getElementById('generateBtn').addEventListener('click', () => {
+  const base = location.origin + '/view.html'; // ← 自動的に同一ドメイン内にする
+  const params = new URLSearchParams({
+    title: document.getElementById('title').value,
+    to: document.getElementById('to').value,
+    from: document.getElementById('from').value,
+    msg: document.getElementById('msg').value
+  });
+  const link = `${base}?${params.toString()}`;
+  document.getElementById('shareLink').value = link;
+});
+
+  </script>
+
+</body>
+</html>
+
+
+
+

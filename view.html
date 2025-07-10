@@ -1,0 +1,41 @@
+<!-- view.html -->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Friend Awards 表彰状</title>
+  <style>
+    body { max-width: 600px; margin: 40px auto; padding: 20px; font-family: serif; background: #fff8e1; }
+    .award {
+      border: 4px double #6b3e00;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.2);
+      background: #fffdf7;
+    }
+    .title { font-size: 1.8rem; color: #6b3e00; text-align: center; font-weight: bold; }
+    .to { font-size: 1.3rem; margin-top: 20px; }
+    .msg { font-style: italic; margin: 30px 0; white-space: pre-wrap; }
+    .from { text-align: right; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+  <div class="award">
+    <div class="title" id="vTitle">賞状タイトル</div>
+    <div class="to" id="vTo">〇〇 様</div>
+    <div class="msg" id="vMsg">メッセージが表示されます</div>
+    <div class="from" id="vFrom">送信者</div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    document.getElementById('vTitle').textContent = params.get('title') || 'Friend Award';
+    document.getElementById('vTo').textContent = (params.get('to') || 'あなた') + ' 様';
+    document.getElementById('vMsg').textContent = params.get('msg') || '';
+    document.getElementById('vFrom').textContent = params.get('from') || '';
+  </script>
+
+</body>
+</html>
