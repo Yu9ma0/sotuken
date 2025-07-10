@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>撮影ページリンク作成</title>
+  <style>
+    body { max-width: 600px; margin: 40px auto; font-family: sans-serif; }
+    label { display: block; margin-top: 20px; font-weight: bold; }
+    input[type="text"] {
+      width: 100%; padding: 10px; margin-top: 5px;
+      border: 1px solid #ccc; border-radius: 6px;
+    }
+    button {
+      margin-top: 20px; padding: 12px 20px;
+      background: #6b3e00; color: white; border: none;
+      border-radius: 6px; font-size: 1rem;
+    }
+    #output {
+      margin-top: 20px;
+      word-break: break-all;
+      background: #f3f3f3;
+      padding: 10px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Friend Awards 撮影用リンク生成</h1>
+
+  <label for="imgUrl">賞状画像のURL</label>
+  <input type="text" id="imgUrl" placeholder="https://yourdomain.com/images/award123.png" />
+
+  <button id="generateBtn">撮影用リンクを作成</button>
+
+  <div id="output"></div>
+
+  <script>
+    document.getElementById('generateBtn').addEventListener('click', () => {
+      const base = 'https://yourdomain.com/ar-award.html'; // ← 必要に応じて変更！
+      const imgUrl = document.getElementById('imgUrl').value.trim();
+      if (!imgUrl) {
+        alert('画像URLを入力してください');
+        return;
+      }
+      const encodedImg = encodeURIComponent(imgUrl);
+      const fullUrl = `${base}?img=${encodedImg}`;
+
+      document.getElementById('output').innerHTML = `
+        <p><strong>このURLを友だちに送ってください👇</strong></p>
+        <input type="text" value="${fullUrl}" readonly style="width:100%; padding:10px;" onclick="this.select();" />
+        <p><a href="${fullUrl}" target="_blank">▶ 撮影ページを開く</a></p>
+      `;
+    });
+  </script>
+
+</body>
+</html>
