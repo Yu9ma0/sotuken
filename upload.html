@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>画像アップロード - Friend Awards</title>
+<style>
+  body { max-width: 600px; margin: 40px auto; font-family: sans-serif; }
+  button, input[type=file] { margin-top: 20px; }
+  #linkContainer { margin-top: 20px; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<h1>賞状画像アップロード</h1>
+<input type="file" id="fileInput" accept="image/*" />
+<button id="uploadBtn">アップロードしてARリンク作成</button>
+
+<div id="linkContainer"></div>
+
+<script>
+  const cloudName = 'deqxzjvbi';
+  const uploadPreset = 'wfifas6f';
+
+  document.getElementById('uploadBtn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('fileInput');
+    if (!fileInput.files.length) {
+      alert('画像を選択してください');
+      return;
+    }
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.secure_url) {
+        const encodedUrl = encodeURIComponent(data.secure_url);
+        const arLink = `${location.origin}/ar-award.html?img=${encodedUrl}`;
+        document.getElementById('linkContainer').innerHTML = `
+          <p>アップロード成功！下のリンクからAR表示ができます。</p>
+          <a href="${arLink}" target="_blank">${arLink}</a>
+        `;
+      } else {
+        alert('アップロードに失敗しました');
+        console.error(data);
+      }
+    } catch (e) {
+      alert('アップロードエラー');
+      console.error(e);
+    }
+  });
+</script>
+
+</body>
+</html>
