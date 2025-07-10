@@ -89,27 +89,35 @@
   }
 
   function takeScreenshot() {
-    const canvas = document.createElement('canvas');
-    canvas.width = camera.videoWidth;
-    canvas.height = camera.videoHeight;
-    const ctx = canvas.getContext('2d');
+  const canvas = document.createElement('canvas');
+  canvas.width = camera.videoWidth;
+  canvas.height = camera.videoHeight;
+  const ctx = canvas.getContext('2d');
 
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+  // 1. カメラ映像をミラー描画
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = overlay.src;
-    img.onload = () => {
-      const imgW = canvas.width * 0.8;
-      const imgH = img.height * (imgW / img.width);
-      ctx.drawImage(img, (canvas.width - imgW) / 2, (canvas.height - imgH) / 2, imgW, imgH);
+  // 2. 賞状画像を非ミラーで描画するため、一時的に元に戻す
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // リセット
 
-      captured.src = canvas.toDataURL('image/png');
-      preview.style.display = 'flex';
-    };
-  }
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = overlay.src;
+  img.onload = () => {
+    const imgW = canvas.width * 0.8;
+    const imgH = img.height * (imgW / img.width);
+    const x = (canvas.width - imgW) / 2;
+    const y = (canvas.height - imgH) / 2;
+
+    ctx.drawImage(img, x, y, imgW, imgH);
+
+    captured.src = canvas.toDataURL('image/png');
+    preview.style.display = 'flex';
+  };
+}
+
 
   window.addEventListener('load', () => {
     const imgUrl = getParam('img');
