@@ -1,180 +1,122 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Friend Awards AR撮影</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Friend Award 生成ツール</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
-    body, html {
-      margin: 0; padding: 0; height: 100%; overflow: hidden;
+    body {
       font-family: sans-serif;
-      background: black;
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 1rem;
     }
-    #camera {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      object-fit: cover;
-      z-index: 0;
-      transform: scaleX(-1);
+    label { display: block; margin-top: 1rem; font-weight: bold; }
+    input, textarea {
+      width: 100%; padding: 0.5rem; margin-top: 0.3rem; font-size: 1rem;
     }
-    #overlay {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80vw;
-      max-width: 400px;
-      z-index: 1;
-      pointer-events: none;
+    button {
+      margin-top: 1.5rem; padding: 0.8rem 1.5rem;
+      background: #6b3e00; color: white; border: none; border-radius: 6px;
+      font-size: 1rem; cursor: pointer;
     }
-    #shootBtn {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 2;
-      padding: 12px 24px;
-      background: #6b3e00;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
+    #awardPreview {
+      margin-top: 2rem;
+      padding: 2rem;
+      border: 2px dashed #6b3e00;
+      text-align: center;
+      background: #fffaf0;
     }
-    #preview {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.9);
-      justify-content: center; align-items: center;
-      z-index: 10;
-    }
-    #preview img {
-      max-width: 90vw;
-      max-height: 90vh;
-    }
+    .title { font-size: 1.5rem; font-weight: bold; color: #6b3e00; }
+    .to { margin-top: 1rem; font-size: 1.2rem; }
+    .msg { margin: 1.5rem 0; font-style: italic; }
+    .from { text-align: right; }
+    #result { margin-top: 2rem; background: #f4f4f4; padding: 1rem; border-radius: 6px; word-break: break-all; }
   </style>
 </head>
 <body>
+  <h1>Friend Award 生成ツール</h1>
+  <label>賞のタイトル</label>
+  <input id="title" placeholder="例: 再会記念賞" />
 
-<video id="camera" autoplay playsinline muted></video>
-<img id="overlay" src="award.png" alt="賞状" />
-<button id="shootBtn">📸 ツーショット撮影</button>
+  <label>受賞者</label>
+  <input id="to" placeholder="例: 山田 太郎" />
 
-<div id="preview">
-  <img id="captured" />
-</div>
+  <label>送り主</label>
+  <input id="from" placeholder="例: 鈴木 花子" />
 
-<!-- オーバーレイ画像にドラッグ＆ピンチ対応 -->
+  <label>メッセージ</label>
+  <textarea id="msg" rows="4" placeholder="例: また会えて嬉しかったよ！これからもよろしくね"></textarea>
+
+  <button id="generateBtn">📸 撮影ページURLを作成</button>
+
+  <div id="awardPreview">
+    <div class="title" id="pTitle">賞タイトル</div>
+    <div class="to" id="pTo">◯◯ 様</div>
+    <div class="msg" id="pMsg">メッセージがここに表示されます</div>
+    <div class="from" id="pFrom">From: 誰か</div>
+  </div>
+
+  <div id="result"></div>
+
 <script>
-    const camera = document.getElementById('camera');
-    const overlay = document.getElementById('overlay');
-    const preview = document.getElementById('preview');
-    const captured = document.getElementById('captured');
-  
-    const params = new URLSearchParams(location.search);
-    const imageUrl = params.get('img');
-    if (imageUrl) {
-      overlay.src = decodeURIComponent(imageUrl);
-    }
-  
-    startCamera();
-  
-    async function startCamera() {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'user' }
-        });
-        camera.srcObject = stream;
-      } catch (err) {
-        alert('カメラへのアクセスが許可されませんでした。');
-      }
-    }
-  
-    document.getElementById('shootBtn').addEventListener('click', takeScreenshot);
-    preview.addEventListener('click', () => preview.style.display = 'none');
-  
-    function takeScreenshot() {
-      const canvas = document.createElement('canvas');
-      canvas.width = camera.videoWidth;
-      canvas.height = camera.videoHeight;
-      const ctx = canvas.getContext('2d');
-  
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-      ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-  
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = overlay.src;
-      img.onload = () => {
-        const imgW = canvas.width * currentScale;
-        const imgH = img.height * (imgW / img.width);
-        const offsetX = canvas.width * currentX;
-        const offsetY = canvas.height * currentY;
-        ctx.drawImage(img, offsetX - imgW / 2, offsetY - imgH / 2, imgW, imgH);
-        captured.src = canvas.toDataURL('image/png');
-        preview.style.display = 'flex';
-      };
-    }
-  
-    // 🖐️ ドラッグ & ピンチ用の状態変数
-    let isDragging = false;
-    let startX = 0, startY = 0;
-    let currentX = 0.5, currentY = 0.5;
-    let currentScale = 1;
-    let startDist = 0;
-    let startScale = 1;
-  
-    function getTouchDist(touches) {
-      const dx = touches[0].clientX - touches[1].clientX;
-      const dy = touches[0].clientY - touches[1].clientY;
-      return Math.sqrt(dx * dx + dy * dy);
-    }
-  
-    overlay.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      if (e.touches.length === 1) {
-        isDragging = true;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      } else if (e.touches.length === 2) {
-        startDist = getTouchDist(e.touches);
-        startScale = currentScale;
-      }
-    });
-  
-    overlay.addEventListener('touchmove', (e) => {
-      e.preventDefault();
-      if (e.touches.length === 1 && isDragging) {
-        const dx = (e.touches[0].clientX - startX) / window.innerWidth;
-        const dy = (e.touches[0].clientY - startY) / window.innerHeight;
-        currentX += dx;
-        currentY += dy;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      } else if (e.touches.length === 2) {
-        const newDist = getTouchDist(e.touches);
-        currentScale = Math.min(3, Math.max(0.3, startScale * newDist / startDist));
-      }
-      updateOverlayTransform();
-    });
-  
-    overlay.addEventListener('touchend', (e) => {
-      if (e.touches.length === 0) {
-        isDragging = false;
-      }
-    });
-  
-    function updateOverlayTransform() {
-      const x = currentX * 100;
-      const y = currentY * 100;
-      overlay.style.transform = `translate(-50%, -50%) translate(${x - 50}vw, ${y - 50}vh) scale(${currentScale})`;
-    }
-  
-    updateOverlayTransform();
-  </script>
-  
+const CLOUDINARY_URL = 'https://api.cloudinary.com/v1_1/deqxzjvbi/image/upload';
+const UPLOAD_PRESET = 'wfifas6f';
 
+const titleInput = document.getElementById('title');
+const toInput = document.getElementById('to');
+const fromInput = document.getElementById('from');
+const msgInput = document.getElementById('msg');
+
+const pTitle = document.getElementById('pTitle');
+const pTo = document.getElementById('pTo');
+const pFrom = document.getElementById('pFrom');
+const pMsg = document.getElementById('pMsg');
+
+function updatePreview() {
+  pTitle.textContent = titleInput.value || '賞タイトル';
+  pTo.textContent = (toInput.value || '◯◯') + ' 様';
+  pMsg.textContent = msgInput.value || 'メッセージがここに表示されます';
+  pFrom.textContent = 'From: ' + (fromInput.value || '誰か');
+}
+
+titleInput.addEventListener('input', updatePreview);
+toInput.addEventListener('input', updatePreview);
+fromInput.addEventListener('input', updatePreview);
+msgInput.addEventListener('input', updatePreview);
+
+const btn = document.getElementById('generateBtn');
+btn.addEventListener('click', async () => {
+  btn.textContent = 'アップロード中...';
+  const target = document.getElementById('awardPreview');
+  const canvas = await html2canvas(target);
+  const dataUrl = canvas.toDataURL('image/png');
+
+  const formData = new FormData();
+  formData.append('file', dataUrl);
+  formData.append('upload_preset', UPLOAD_PRESET);
+
+  try {
+    const res = await fetch(CLOUDINARY_URL, {
+      method: 'POST',
+      body: formData
+    });
+    const data = await res.json();
+    const imageUrl = data.secure_url;
+    const encoded = encodeURIComponent(imageUrl);
+    const arUrl = `https://yourdomain.com/ar-award.html?img=${encoded}`;
+    document.getElementById('result').innerHTML = `
+      <p><strong>撮影ページURL:</strong></p>
+      <input type="text" value="${arUrl}" readonly onclick="this.select()" style="width:100%; padding:0.5rem;" />
+      <p><a href="${arUrl}" target="_blank">▶ 撮影ページを開く</a></p>
+    `;
+    btn.textContent = '📸 撮影ページURLを作成';
+  } catch (e) {
+    alert('アップロードに失敗しました');
+    btn.textContent = '📸 撮影ページURLを作成';
+  }
+});
+</script>
 </body>
 </html>
