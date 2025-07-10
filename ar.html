@@ -1,4 +1,3 @@
-<!-- ar-award.html -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -17,7 +16,7 @@
       width: 100vw; height: 100vh;
       object-fit: cover;
       z-index: 0;
-      transform: scaleX(-1); /* インカメラをミラー表示 */
+      transform: scaleX(-1);
     }
     #overlay {
       position: fixed;
@@ -59,7 +58,7 @@
 <body>
 
 <video id="camera" autoplay playsinline muted></video>
-<img id="overlay" src="images/award.png" alt="賞状" />
+<img id="overlay" src="award.png" alt="賞状" />
 <button id="shootBtn">📸 ツーショット撮影</button>
 
 <div id="preview">
@@ -71,6 +70,13 @@
   const overlay = document.getElementById('overlay');
   const preview = document.getElementById('preview');
   const captured = document.getElementById('captured');
+
+  // URLからimgパラメータを読み取り
+  const params = new URLSearchParams(location.search);
+  const imageUrl = params.get('img');
+  if (imageUrl) {
+    overlay.src = decodeURIComponent(imageUrl);
+  }
 
   async function startCamera() {
     try {
@@ -89,20 +95,17 @@
     canvas.height = camera.videoHeight;
     const ctx = canvas.getContext('2d');
 
-    // ミラー表示に対応
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-    // 賞状画像を重ねる
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // CORS対応
     img.src = overlay.src;
     img.onload = () => {
       const imgW = canvas.width * 0.8;
       const imgH = img.height * (imgW / img.width);
       ctx.drawImage(img, (canvas.width - imgW) / 2, (canvas.height - imgH) / 2, imgW, imgH);
-
-      // プレビュー表示
       captured.src = canvas.toDataURL('image/png');
       preview.style.display = 'flex';
     };
