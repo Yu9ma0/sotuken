@@ -30,7 +30,7 @@
   <h1>Friend Awards 撮影用リンク生成</h1>
 
   <label for="imgUrl">賞状画像のURL</label>
-  <input type="text" id="imgUrl" placeholder="https://yourdomain.com/images/award123.png" />
+  <input type="text" id="imgUrl" placeholder="https://yu9ma0.github.io/sotuken/award.png" />
 
   <button id="generateBtn">撮影用リンクを作成</button>
 
@@ -38,7 +38,7 @@
 
   <script>
     document.getElementById('generateBtn').addEventListener('click', () => {
-      const base = 'https://yourdomain.com/ar-award.html'; // ← 必要に応じて変更！
+      const base = 'https://yu9ma0.github.io/sotuken//ar-award.html'; // ← 必要に応じて変更！
       const imgUrl = document.getElementById('imgUrl').value.trim();
       if (!imgUrl) {
         alert('画像URLを入力してください');
