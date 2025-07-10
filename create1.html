@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>賞状画像化サンプル</title>
+<style>
+  /* （先ほどのプレビューと同じCSSをここに貼ってください） */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  label {
+    display: block;
+    margin-top: 20px;
+    font-weight: bold;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 6px;
+    font-size: 1rem;
+    box-sizing: border-box;
+  }
+  textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+  .preview {
+    margin-top: 40px;
+    padding: 20px;
+    border: 3px solid #444;
+    border-radius: 12px;
+    background: #fefcf7;
+    box-shadow: 3px 3px 10px rgba(0,0,0,0.15);
+    font-family: 'serif';
+    color: #333;
+  }
+  .title {
+    font-size: 1.6rem;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #6b3e00;
+  }
+  .recipient {
+    font-size: 1.3rem;
+    margin-bottom: 20px;
+  }
+  .message {
+    font-size: 1.1rem;
+    font-style: italic;
+    margin-bottom: 30px;
+    white-space: pre-wrap;
+  }
+  .sender {
+    text-align: right;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #6b3e00;
+    color: white;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #593100;
+  }
+</style>
+</head>
+<body>
+
+<h1>Friend Awards 賞状作成 & 画像化</h1>
+
+<label for="title">賞状タイトル</label>
+<input type="text" id="title" placeholder="例: 久しぶりの再会賞" />
+
+<label for="recipient">受け取る人の名前</label>
+<input type="text" id="recipient" placeholder="例: 山田 太郎" />
+
+<label for="sender">送る側の名前</label>
+<input type="text" id="sender" placeholder="例: 鈴木 花子" />
+
+<label for="message">メッセージ（任意）</label>
+<textarea id="message" placeholder="例: また会えて本当に嬉しい！これからもよろしくね。"></textarea>
+
+<div class="preview" id="preview">
+  <div class="title">賞状タイトルがここに表示されます</div>
+  <div class="recipient">[受け取る人の名前] 様</div>
+  <div class="message">ここにメッセージが入ります。</div>
+  <div class="sender">送った人の名前</div>
+</div>
+
+<button id="downloadBtn">賞状を画像で保存</button>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  const titleInput = document.getElementById('title');
+  const recipientInput = document.getElementById('recipient');
+  const senderInput = document.getElementById('sender');
+  const messageInput = document.getElementById('message');
+
+  const preview = document.getElementById('preview');
+  const previewTitle = preview.querySelector('.title');
+  const previewRecipient = preview.querySelector('.recipient');
+  const previewSender = preview.querySelector('.sender');
+  const previewMessage = preview.querySelector('.message');
+
+  function updatePreview() {
+    previewTitle.textContent = titleInput.value.trim() || '賞状タイトルがここに表示されます';
+    previewRecipient.textContent = (recipientInput.value.trim() || '[受け取る人の名前]') + ' 様';
+    previewSender.textContent = senderInput.value.trim() || '送った人の名前';
+    previewMessage.textContent = messageInput.value.trim() || 'ここにメッセージが入ります。';
+  }
+
+  titleInput.addEventListener('input', updatePreview);
+  recipientInput.addEventListener('input', updatePreview);
+  senderInput.addEventListener('input', updatePreview);
+  messageInput.addEventListener('input', updatePreview);
+
+  updatePreview();
+
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    html2canvas(preview).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'friend_award.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    });
+  });
+</script>
+
+</body>
+</html>

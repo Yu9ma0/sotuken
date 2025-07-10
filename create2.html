@@ -33,18 +33,22 @@
   <p><strong>リンク:</strong></p>
   <input type="text" id="shareLink" readonly />
 
+  <button id="generateArLinkBtn">AR表示用リンクを作る</button>
+  <input type="text" id="arShareLink" readonly style="width: 100%; margin-top: 10px;" />
+　
   <script>
    document.getElementById('generateBtn').addEventListener('click', () => {
-  const base = 'https://yu9ma0.github.io/sotuken/view.html';
-  const params = new URLSearchParams({
-    title: document.getElementById('title').value,
-    to: document.getElementById('to').value,
-    from: document.getElementById('from').value,
-    msg: document.getElementById('msg').value
-  });
-  const link = `${base}?${params.toString()}`;
-  document.getElementById('shareLink').value = link;
+  const base = 'https://yu9ma0.github.io/sotuken/ar_awards.html';
+  
+  // Cloudinaryなどで生成された賞状画像のURL（すでに表示されているならそれを取得）
+  const awardUrl = document.getElementById('awardImage')?.src || 'https://example.com/default-award.png';
+
+  const fullLink = `${base}?img=${encodeURIComponent(awardUrl)}`;
+  document.getElementById('arShareLink').value = fullLink;
 });
+
+  
+
 
   </script>
 
