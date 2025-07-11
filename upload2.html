@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Friend Awards AR撮影（反転修正済み）</title>
+<title>AR撮影</title>
 <style>
   body, html {
     margin: 0; padding: 0; height: 100%; overflow: hidden;
@@ -16,7 +16,7 @@
     width: 100vw; height: 100vh;
     object-fit: cover;
     z-index: 0;
-    transform: scaleX(-1); /* ミラー表示 */
+    transform: scaleX(-1);
   }
   #overlay {
     position: fixed;
@@ -59,7 +59,7 @@
 
 <video id="camera" autoplay playsinline muted></video>
 <img id="overlay" alt="賞状オーバーレイ" />
-<button id="shootBtn">📸 ツーショット撮影</button>
+<button id="shootBtn">📸</button>
 
 <div id="preview">
   <img id="captured" />
@@ -89,46 +89,34 @@
   }
 
   function takeScreenshot() {
-    const canvas = document.createElement('canvas');
-    canvas.width = camera.videoWidth;
-    canvas.height = camera.videoHeight;
-    const ctx = canvas.getContext('2d');
+  const canvas = document.createElement('canvas');
+  canvas.width = camera.videoWidth;
+  canvas.height = camera.videoHeight;
+  const ctx = canvas.getContext('2d');
 
-    // カメラ映像はミラー反転して描画
-    ctx.translate(canvas.width, 0);
-    ctx.scale(-1, 1);
-    ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
+  // カメラ映像は左右反転して描画（ミラー表示）
+  ctx.translate(canvas.width, 0);
+  ctx.scale(-1, 1);
+  ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-    // 描画状態をリセットしてから賞状画像を反転なしで描画
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+  // ここで一旦変換をリセットしてから賞状画像を描画する
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = overlay.src;
-    img.onload = () => {
-      const imgW = canvas.width * 0.8;
-      const imgH = img.height * (imgW / img.width);
-      ctx.drawImage(img, (canvas.width - imgW) / 2, (canvas.height - imgH) / 2, imgW, imgH);
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = overlay.src;
+  img.onload = () => {
+    // 賞状画像を中央に描画（反転なし）
+    const imgW = canvas.width * 0.8;
+    const imgH = img.height * (imgW / img.width);
+    ctx.drawImage(img, (canvas.width - imgW) / 2, (canvas.height - imgH) / 2, imgW, imgH);
 
-      captured.src = canvas.toDataURL('image/png');
-      preview.style.display = 'flex';
-    };
-  }
+    captured.src = canvas.toDataURL('image/png');
+    preview.style.display = 'flex';
+  };
+}
 
-  window.addEventListener('load', () => {
-    const imgUrl = getParam('img');
-    if (imgUrl) {
-      overlay.src = decodeURIComponent(imgUrl);
-    } else {
-      overlay.src = 'award.png';
-    }
-    startCamera();
-  });
-
-  document.getElementById('shootBtn').addEventListener('click', takeScreenshot);
-  preview.addEventListener('click', () => preview.style.display = 'none');
 </script>
 
 </body>
 </html>
-
