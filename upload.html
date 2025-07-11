@@ -5,8 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>画像アップロード - Friend Awards</title>
   <style>
-    body { max-width: 600px; margin: 40px auto; font-family: sans-serif; }
+    body { max-width: 600px; margin: 40px auto; font-family: sans-serif; text-align: center; }
     button, input[type=file] { margin-top: 20px; }
+    #loading {
+      display: none;
+      margin-top: 30px;
+      font-size: 1.2rem;
+      color: #6b3e00;
+    }
+    .spinner {
+      margin: 16px auto;
+      width: 40px;
+      height: 40px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #6b3e00;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -15,83 +34,57 @@
 <input type="file" id="fileInput" accept="image/*" />
 <button id="uploadBtn">アップロードしてARへ進む</button>
 
+<div id="loading">
+  <div class="spinner"></div>
+  アップロード中です...
+</div>
+
 <script>
-    const cloudName = 'deqxzjvbi';
-    const uploadPreset = 'wfifas6f';
-  
-    // ✅ ステップ②：localStorage に画像があれば自動アップロード
-    window.addEventListener("load", async () => {
-      const dataURL = localStorage.getItem("awardImage");
-      if (dataURL) {
-        const blob = await (await fetch(dataURL)).blob();
-        const file = new File([blob], "award.png", { type: "image/png" });
-  
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", uploadPreset);
-  
-        document.getElementById("loading").style.display = "block";
-  
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-          method: "POST",
-          body: formData
-        });
-        const data = await res.json();
-  
-        if (data.secure_url) {
-          const encodedUrl = encodeURIComponent(data.secure_url);
-          const arPage = `https://yu9ma0.github.io/sotuken/ar-award.html?img=${encodedUrl}`;
-          window.location.href = arPage;
-        } else {
-          alert("アップロードに失敗しました");
-          document.getElementById("loading").style.display = "none";
-          console.error(data);
-        }
-      }
-    });
-  
-    // 手動アップロード（ボタンが押された場合）
-    document.getElementById('uploadBtn').addEventListener('click', async () => {
-      const fileInput = document.getElementById('fileInput');
-      const loading = document.getElementById('loading');
-  
-      if (!fileInput.files.length) {
-        alert('画像を選択してください');
-        return;
-      }
-  
-      const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('upload_preset', uploadPreset);
-  
-      loading.style.display = 'block';
-  
-      try {
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/upload`, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-  
-        if (data.secure_url) {
-          const encodedUrl = encodeURIComponent(data.secure_url);
-          const arPage = `https://yu9ma0.github.io/sotuken/ar-award.html?img=${encodedUrl}`;
-          window.location.href = arPage;
-        } else {
-          alert('アップロードに失敗しました');
-          loading.style.display = 'none';
-          console.error(data);
-        }
-  
-      } catch (e) {
-        alert('アップロードエラー');
+  const cloudName = 'deqxzjvbi';
+  const uploadPreset = 'wfifas6f';
+
+  document.getElementById('uploadBtn').addEventListener('click', async () => {
+    const fileInput = document.getElementById('fileInput');
+    const loading = document.getElementById('loading');
+
+    if (!fileInput.files.length) {
+      alert('画像を選択してください');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', uploadPreset);
+
+    const url = `https://api.cloudinary.com/v1_1/${cloudName}/upload`;
+
+    loading.style.display = 'block'; // ローディング表示開始
+
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+
+      if (data.secure_url) {
+        const encodedUrl = encodeURIComponent(data.secure_url);
+        const arPage = `https://yu9ma0.github.io/sotuken/ar-award.html?img=${encodedUrl}`;
+        window.location.href = arPage; // 自動遷移
+      } else {
+        alert('アップロードに失敗しました');
+        console.error(data);
         loading.style.display = 'none';
-        console.error(e);
       }
-    });
-  </script>
-  
+
+    } catch (e) {
+      alert('アップロードエラー');
+      console.error(e);
+      loading.style.display = 'none';
+    }
+  });
+</script>
 
 </body>
 </html>
