@@ -77,9 +77,9 @@
 </head>
 <body>
 
-<h1>Friend Awards 賞状作成 & 画像化</h1>
+<h1>表彰状作成</h1>
 
-<label for="title">賞状タイトル</label>
+<label for="title">受賞部門</label>
 <input type="text" id="title" placeholder="例: 久しぶりの再会賞" />
 
 <label for="recipient">受け取る人の名前</label>
@@ -92,16 +92,18 @@
 <textarea id="message" placeholder="例: また会えて本当に嬉しい！これからもよろしくね。"></textarea>
 
 <div class="preview" id="preview">
-  <div class="title">賞状タイトルがここに表示されます</div>
-  <div class="recipient">[受け取る人の名前] 様</div>
+  <div class="title">受賞部門がここに表示されます</div>
+  <div class="recipient">[受け取る人の名前] さま</div>
   <div class="message">ここにメッセージが入ります。</div>
   <div class="sender">送った人の名前</div>
 </div>
 
-<button id="downloadBtn">賞状を画像で保存</button>
+<button id="downloadBtn">表彰状を画像で保存</button>
 <!-- 作成ページで「画像をCanvasで生成 → DataURLに変換」して保存 -->
-<canvas id="awardCanvas" width="800" height="600"></canvas>
 <button id="goToUpload">アップロードへ進む</button>
+<canvas id="awardCanvas" width="800" height="600"></canvas>
+
+
 
 <script>
   document.getElementById("goToUpload").addEventListener("click", () => {
