@@ -19,14 +19,18 @@
     transform: scaleX(-1);
   }
   #overlay {
-    position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 80vw;
-    max-width: 400px;
-    z-index: 1;
-    pointer-events: none;
-  }
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 80vw;
+  max-width: 400px;
+  z-index: 1;
+  touch-action: none;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: grab;
+}
+
   #shootBtn {
     position: fixed;
     bottom: 20px;
@@ -93,6 +97,48 @@
   canvas.width = camera.videoWidth;
   canvas.height = camera.videoHeight;
   const ctx = canvas.getContext('2d');
+　
+  // === ドラッグで overlay を動かす ===
+let isDragging = false;
+let startX, startY;
+let offsetX = 0, offsetY = 0;
+
+const updateOverlayPosition = () => {
+  overlay.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+};
+
+const startDrag = (x, y) => {
+  isDragging = true;
+  startX = x;
+  startY = y;
+};
+
+const duringDrag = (x, y) => {
+  if (!isDragging) return;
+  offsetX += x - startX;
+  offsetY += y - startY;
+  startX = x;
+  startY = y;
+  updateOverlayPosition();
+};
+
+const endDrag = () => {
+  isDragging = false;
+};
+
+overlay.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
+window.addEventListener('mousemove', e => duringDrag(e.clientX, e.clientY));
+window.addEventListener('mouseup', endDrag);
+
+overlay.addEventListener('touchstart', e => {
+  const t = e.touches[0];
+  startDrag(t.clientX, t.clientY);
+});
+window.addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  duringDrag(t.clientX, t.clientY);
+}, { passive: false });
+window.addEventListener('touchend', endDrag);
 
   // 1. カメラ映像をミラー描画
   ctx.translate(canvas.width, 0);
