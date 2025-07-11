@@ -1,68 +1,71 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Friend Awards AR撮影</title>
-<style>
-  body, html {
-    margin: 0; padding: 0; height: 100%; overflow: hidden;
-    font-family: sans-serif;
-    background: black;
-  }
-  #camera {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    object-fit: cover;
-    z-index: 0;
-    transform: scaleX(-1);
-  }
-  #overlay {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  width: 80vw;
-  max-width: 400px;
-  z-index: 1;
-  touch-action: none;
-  transform: translate(-50%, -50%);
-  pointer-events: auto;
-  cursor: grab;
-}
-
-  #shootBtn {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 2;
-    padding: 12px 24px;
-    background: #6b3e00;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 1.1rem;
-  }
-  #preview {
-    display: none;
-    position: fixed;
-    top: 0; left: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.9);
-    justify-content: center; align-items: center;
-    z-index: 10;
-  }
-  #preview img {
-    max-width: 90vw;
-    max-height: 90vh;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Friend Awards AR撮影</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: sans-serif;
+      background: black;
+    }
+    #camera {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      object-fit: cover;
+      z-index: 0;
+      transform: scaleX(-1); /* インカメラをミラー表示 */
+    }
+    #overlay {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 80vw;
+      max-width: 400px;
+      z-index: 1;
+      pointer-events: auto;
+      touch-action: none;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+    }
+    #shootBtn {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 2;
+      padding: 12px 24px;
+      background: #6b3e00;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+    }
+    #preview {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+    #preview img {
+      max-width: 90vw;
+      max-height: 90vh;
+    }
+  </style>
 </head>
 <body>
 
 <video id="camera" autoplay playsinline muted></video>
-<img id="overlay" alt="賞状オーバーレイ" />
+<img id="overlay" src="" alt="賞状" />
 <button id="shootBtn">📸 ツーショット撮影</button>
 
 <div id="preview">
@@ -75,11 +78,13 @@
   const preview = document.getElementById('preview');
   const captured = document.getElementById('captured');
 
+  // --- パラメータ取得 ---
   function getParam(name) {
     const params = new URLSearchParams(window.location.search);
     return params.get(name);
   }
 
+  // --- カメラ起動 ---
   async function startCamera() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -87,93 +92,95 @@
       });
       camera.srcObject = stream;
     } catch (err) {
-      alert('カメラへのアクセスが許可されませんでした。');
+      alert('カメラの使用が許可されていません');
       console.error(err);
     }
   }
 
+  // --- overlay位置記録用 ---
+  let offsetX = 0, offsetY = 0;
+  let isDragging = false;
+  let startX = 0, startY = 0;
+
+  function updateOverlayPosition() {
+    overlay.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
+  }
+
+  function startDrag(x, y) {
+    isDragging = true;
+    startX = x;
+    startY = y;
+  }
+
+  function duringDrag(x, y) {
+    if (!isDragging) return;
+    offsetX += x - startX;
+    offsetY += y - startY;
+    startX = x;
+    startY = y;
+    updateOverlayPosition();
+  }
+
+  function endDrag() {
+    isDragging = false;
+  }
+
+  // --- マウス & タッチイベント ---
+  overlay.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => duringDrag(e.clientX, e.clientY));
+  window.addEventListener('mouseup', endDrag);
+
+  overlay.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    startDrag(t.clientX, t.clientY);
+  });
+  window.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    duringDrag(t.clientX, t.clientY);
+  }, { passive: false });
+  window.addEventListener('touchend', endDrag);
+
+  // --- 撮影 ---
   function takeScreenshot() {
-  const canvas = document.createElement('canvas');
-  canvas.width = camera.videoWidth;
-  canvas.height = camera.videoHeight;
-  const ctx = canvas.getContext('2d');
-　
-  // === ドラッグで overlay を動かす ===
-let isDragging = false;
-let startX, startY;
-let offsetX = 0, offsetY = 0;
+    const canvas = document.createElement('canvas');
+    canvas.width = camera.videoWidth;
+    canvas.height = camera.videoHeight;
+    const ctx = canvas.getContext('2d');
 
-const updateOverlayPosition = () => {
-  overlay.style.transform = `translate(calc(-50% + ${offsetX}px), calc(-50% + ${offsetY}px))`;
-};
+    // 1. カメラ（ミラー表示）
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+    ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
 
-const startDrag = (x, y) => {
-  isDragging = true;
-  startX = x;
-  startY = y;
-};
+    // 2. transformリセットして画像描画
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-const duringDrag = (x, y) => {
-  if (!isDragging) return;
-  offsetX += x - startX;
-  offsetY += y - startY;
-  startX = x;
-  startY = y;
-  updateOverlayPosition();
-};
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = overlay.src;
+    img.onload = () => {
+      const imgW = canvas.width * 0.8;
+      const imgH = img.height * (imgW / img.width);
+      const centerX = canvas.width / 2 + offsetX;
+      const centerY = canvas.height / 2 + offsetY;
 
-const endDrag = () => {
-  isDragging = false;
-};
+      ctx.drawImage(img, centerX - imgW / 2, centerY - imgH / 2, imgW, imgH);
 
-overlay.addEventListener('mousedown', e => startDrag(e.clientX, e.clientY));
-window.addEventListener('mousemove', e => duringDrag(e.clientX, e.clientY));
-window.addEventListener('mouseup', endDrag);
+      captured.src = canvas.toDataURL('image/png');
+      preview.style.display = 'flex';
+    };
+  }
 
-overlay.addEventListener('touchstart', e => {
-  const t = e.touches[0];
-  startDrag(t.clientX, t.clientY);
-});
-window.addEventListener('touchmove', e => {
-  const t = e.touches[0];
-  duringDrag(t.clientX, t.clientY);
-}, { passive: false });
-window.addEventListener('touchend', endDrag);
-
-  // 1. カメラ映像をミラー描画
-  ctx.translate(canvas.width, 0);
-  ctx.scale(-1, 1);
-  ctx.drawImage(camera, 0, 0, canvas.width, canvas.height);
-
-  // 2. 賞状画像を非ミラーで描画するため、一時的に元に戻す
-  ctx.setTransform(1, 0, 0, 1, 0, 0); // リセット
-
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.src = overlay.src;
-  img.onload = () => {
-    const imgW = canvas.width * 0.8;
-    const imgH = img.height * (imgW / img.width);
-    const x = (canvas.width - imgW) / 2;
-    const y = (canvas.height - imgH) / 2;
-
-    ctx.drawImage(img, x, y, imgW, imgH);
-
-    captured.src = canvas.toDataURL('image/png');
-    preview.style.display = 'flex';
-  };
-}
-
-
+  // --- 初期化 ---
   window.addEventListener('load', () => {
     const imgUrl = getParam('img');
     if (imgUrl) {
       overlay.src = decodeURIComponent(imgUrl);
     } else {
-      // デフォルト画像など
-      overlay.src = 'award.png';
+      overlay.src = 'award.png'; // デフォルト画像
     }
     startCamera();
+    updateOverlayPosition();
   });
 
   document.getElementById('shootBtn').addEventListener('click', takeScreenshot);
