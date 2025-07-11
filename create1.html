@@ -99,6 +99,20 @@
 </div>
 
 <button id="downloadBtn">賞状を画像で保存</button>
+<!-- 作成ページで「画像をCanvasで生成 → DataURLに変換」して保存 -->
+<canvas id="awardCanvas" width="800" height="600"></canvas>
+<button id="goToUpload">アップロードへ進む</button>
+
+<script>
+  document.getElementById("goToUpload").addEventListener("click", () => {
+    const canvas = document.getElementById("awardCanvas");
+    const dataURL = canvas.toDataURL("image/png");
+    localStorage.setItem("awardImage", dataURL);
+
+    // upload.html へ遷移（GitHub Pages用に正確なパス）
+    location.href = "https://yu9ma0.github.io/sotuken/upload.html";
+  });
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
@@ -135,6 +149,7 @@
       link.click();
     });
   });
+  
 </script>
 
 </body>
