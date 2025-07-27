@@ -148,7 +148,7 @@
   const previewMessage = preview.querySelector('.message');
 
   function updatePreview() {
-    previewTitle.textContent = titleInput.value.trim() || '賞状タイトルがここに表示されます';
+    previewTitle.textContent = titleInput.value.trim() || '賞の名前がここに表示されます';
     previewRecipient.textContent = (recipientInput.value.trim() || '[受け取る人の名前]') + ' さま';
     previewSender.textContent = senderInput.value.trim() || '送った人の名前';
     previewMessage.textContent = messageInput.value.trim() || 'ここにメッセージが入ります。';
