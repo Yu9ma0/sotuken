@@ -1,35 +1,27 @@
-<!DOCTYPE html> <html lang="ja"> 
-    <head> <meta charset="UTF-8"> <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-    <title>ばあちゃんボイス</title>
-     <style> body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; text-align: center; } button { padding: 1em 2em; font-size: 1.2em; margin-top: 20px; } </style> 
-    </head> 
-    <html>
-    <script src="script.js"></script>
-    <audio id="bachanAudio" src="bachan_friend.mp3" autoplay loop></audio>
-     <body> 
-        <h1>おばあちゃんの声を聞こう！</h1>  
-    </body>
-    </html>
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const type = urlParams.get('type') || 'friend';
-  
-    window.addEventListener('load', () => {
-      audio.play().catch(err => {
-        console.log("自動再生がブロックされました:", err);
-        // → ブロックされたらボタンを表示する
-        document.getElementById('playBtn').style.display = 'block';
-      });
-    });
-  
-    const btn = document.getElementById('playBtn');
-    btn.addEventListener('click', () => {
-      audio.play();
-      btn.style.display = 'none';
-    });
-  
-    audio.addEventListener('ended', () => {
-      alert('さ、ハイチーズ！📸');
-    });
-  </script>
-  
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ばあちゃんボイス</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+     body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #000000;
+      color: rgb(255, 255, 255);
+    }
+  </style>
+</head>
+
+</html>
+  <audio id="fireSound" src="bachan_friend.mp3" autoplay></audio>
+  <script src="script.js"></script>
+</body>
+</html>
+
