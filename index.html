@@ -1,67 +1,32 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ケースがシャッターを切りたがる</title>
-<style>
-  body { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; font-family: sans-serif; text-align: center; }
-  button { padding: 1em 2em; font-size: 1.2em; margin-top: 20px; }
-  video { width: 80%; max-width: 400px; margin-top: 20px; display: none; }
-</style>
-</head>
-<body>
-
-<h1>スマホケースがシャッターを切りたがるよ！</h1>
-<button id="triggerBtn">トントンして準備</button>
-<audio id="obachanAudio" src="obachan_tonton.mp3"></audio>
-<video id="cameraView" autoplay playsinline></video>
-<button id="captureBtn" style="display:none;">📸 撮影</button>
-
 <script>
-  const triggerBtn = document.getElementById('triggerBtn');
-  const audio = document.getElementById('obachanAudio');
-  const video = document.getElementById('cameraView');
-  const captureBtn = document.getElementById('captureBtn');
-
-  let stream;
-
-  // トントンボタン → 音声再生
-  triggerBtn.addEventListener('click', async () => {
-    triggerBtn.disabled = true;
-    await audio.play();
-
-    // 音声終了後にカメラ起動
-    audio.onended = async () => {
-      // カメラアクセス
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        video.style.display = 'block';
-        captureBtn.style.display = 'inline-block';
-      } catch (err) {
-        alert('カメラにアクセスできませんでした。');
-      }
+    const urlParams = new URLSearchParams(window.location.search);
+    const type = urlParams.get('type') || 'friend';
+  
+    const audioMap = {
+      friend: 'bachan_friend.mp3',
+      senpai: 'bachan_senpai.mp3',
+      kohai: 'bachan_kohai.mp3'
     };
-  });
-
-  // 撮影ボタン
-  captureBtn.addEventListener('click', () => {
-    const canvas = document.createElement('canvas');
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const imgData = canvas.toDataURL('image/png');
-    
-    // 写真確認
-    const win = window.open();
-    win.document.write(`<img src="${imgData}" style="max-width:100%">`);
-
-    // カメラストリーム停止
-    stream.getTracks().forEach(track => track.stop());
-  });
-</script>
-
-</body>
-</html>
+  
+    const audio = document.getElementById('bachanAudio');
+    audio.src = audioMap[type];
+  
+    window.addEventListener('load', () => {
+      audio.play().catch(err => {
+        console.log("自動再生がブロックされました:", err);
+        // → ブロックされたらボタンを表示する
+        document.getElementById('playBtn').style.display = 'block';
+      });
+    });
+  
+    const btn = document.getElementById('playBtn');
+    btn.addEventListener('click', () => {
+      audio.play();
+      btn.style.display = 'none';
+    });
+  
+    audio.addEventListener('ended', () => {
+      alert('さ、ハイチーズ！📸');
+    });
+  </script>
+  
