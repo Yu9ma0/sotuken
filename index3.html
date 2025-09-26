@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFC＋会話間リマインド</title>
+<title>自然リマインドプロトタイプ</title>
 </head>
 <body>
-<h1>自然リマインドプロトタイプ</h1>
-<p>スマホをNFCタグにかざして準備してください。</p>
+<h1>自然リマインド実験</h1>
+<p>スマホをNFCタグにかざす前にボタンを押してください。</p>
 
-<button id="startNFC">NFC読み取り開始</button>
+<button id="startNFC">NFCスキャン開始</button>
 
 <audio id="remindAudio">
   <source src="bachan_friend.mp3" type="audio/mpeg">
@@ -19,8 +19,32 @@
 const startBtn = document.getElementById('startNFC');
 const audio = document.getElementById('remindAudio');
 
-let nfcReady = false;
-let audioPlayed = false;
+let audioAllowed = false;
+
+// 会話間判定用
+async function detectSilenceAndPlay() {
+  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioCtx.createMediaStreamSource(stream);
+  const analyser = audioCtx.createAnalyser();
+  source.connect(analyser);
+  analyser.fftSize = 256;
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  function checkSilence() {
+    analyser.getByteFrequencyData(dataArray);
+    const avg = dataArray.reduce((a,b) => a+b)/dataArray.length;
+    if (avg < 5 && audioAllowed) { // 簡易無音判定
+      audio.play();
+      alert('📸 写真撮ろう！');
+      audioAllowed = false;
+      stream.getTracks().forEach(track => track.stop());
+    } else {
+      requestAnimationFrame(checkSilence);
+    }
+  }
+  checkSilence();
+}
 
 startBtn.addEventListener('click', async () => {
   if ('NDEFReader' in window) {
@@ -31,47 +55,19 @@ startBtn.addEventListener('click', async () => {
       
       ndef.onreading = event => {
         console.log('NFCタグ読み取り成功:', event.serialNumber);
-        nfcReady = true;
-        startMicListening();
+        // 会話間判定を開始
+        audioAllowed = true;
+        detectSilenceAndPlay();
       };
       
     } catch(error) {
       console.error('NFC読み取りエラー:', error);
+      alert('NFC読み取りエラー: ' + error);
     }
   } else {
     alert('このブラウザはNFCに対応していません');
   }
 });
-
-// 会話間の検知
-async function startMicListening() {
-  if (!navigator.mediaDevices) return;
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const audioCtx = new AudioContext();
-  const source = audioCtx.createMediaStreamSource(stream);
-  const analyser = audioCtx.createAnalyser();
-  source.connect(analyser);
-  analyser.fftSize = 2048;
-  const data = new Uint8Array(analyser.fftSize);
-
-  function checkSilence() {
-    analyser.getByteTimeDomainData(data);
-    let sum = 0;
-    for (let i = 0; i < data.length; i++) {
-      let val = (data[i] - 128) / 128;
-      sum += val * val;
-    }
-    let volume = Math.sqrt(sum / data.length);
-
-    if (nfcReady && volume < 0.01 && !audioPlayed) {
-      audio.play();
-      alert('📸 写真撮ろう！');
-      audioPlayed = true;
-    }
-    requestAnimationFrame(checkSilence);
-  }
-  checkSilence();
-}
 </script>
 </body>
 </html>
