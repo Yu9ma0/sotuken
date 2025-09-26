@@ -3,91 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>トントン自然リマインド</title>
+<title>会話中トントンリマインド</title>
+<style>
+  body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+  button { font-size: 20px; padding: 10px 20px; }
+</style>
 </head>
 <body>
-<h1>トントンで自然リマインド</h1>
-<p>スマホを軽く机に置き、トントンしてください。</p>
+<h1>会話中トントンリマインド</h1>
+<p>机をトントンして、会話が途切れたタイミングで音声リマインド！</p>
+<button id="startBtn">センサー＆マイクを有効にする</button>
 
-<button id="startTap">トントン開始</button>
-
-<audio id="remindAudio">
-  <source src="bachan_friend.mp3" type="audio/mpeg">
-</audio>
+<audio id="remindAudio1" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"></audio>
+<audio id="remindAudio2" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"></audio>
 
 <script>
-const startBtn = document.getElementById('startTap');
-const audio = document.getElementById('remindAudio');
-let audioAllowed = false;
+const startBtn = document.getElementById('startBtn');
+const audios = [
+  document.getElementById('remindAudio1'),
+  document.getElementById('remindAudio2')
+];
+let lastShake = 0;
+let audioIndex = 0;
 
-// トントン検知開始
-function startTapDetection() {
-  if (window.DeviceMotionEvent) {
-    alert('スマホをトントンしてください。音声リマインドが流れます。');
-    audioAllowed = true;
-
-    window.addEventListener('devicemotion', (event) => {
-      const acc = event.accelerationIncludingGravity;
-      const totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
-      
-      if (totalAcc > 8 && audioAllowed) { // 閾値を軽く調整
-        audioAllowed = false;
-        detectSilenceAndPlay();
-      }
-    });
-  } else {
-    alert('このブラウザは加速度センサーに対応していません');
+startBtn.addEventListener('click', async () => {
+  // iOS 17以降のセンサー許可
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {
+    const response = await DeviceMotionEvent.requestPermission();
+    if (response !== 'granted') { alert('センサーの許可が必要です'); return; }
   }
-}
-
-// 会話間（無音）判定
-async function detectSilenceAndPlay() {
-  try {
+  // マイクアクセス許可
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const source = audioCtx.createMediaStreamSource(stream);
-    const analyser = audioCtx.createAnalyser();
+    const audioContext = new AudioContext();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaStreamSource(stream);
     source.connect(analyser);
-    analyser.fftSize = 256;
+    analyser.fftSize = 512;
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
-    function checkSilence() {
-      analyser.getByteFrequencyData(dataArray);
-      const avg = dataArray.reduce((a,b) => a+b)/dataArray.length;
-      if (avg < 5) { // 無音判定
-        audio.play();
-        alert('📸 写真撮ろう！');
-        stream.getTracks().forEach(track => track.stop());
-      } else {
-        requestAnimationFrame(checkSilence);
-      }
-    }
-    checkSilence();
-  } catch(e) {
-    console.error(e);
-  }
-}
+    // センサーイベント登録
+    window.addEventListener('devicemotion', (event) => {
+      const acc = event.accelerationIncludingGravity;
+      if (!acc) return;
+      const totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
 
-// iOS13+ 用の権限リクエスト
-async function requestMotionPermission() {
-  if (typeof DeviceMotionEvent.requestPermission === 'function') {
-    try {
-      const response = await DeviceMotionEvent.requestPermission();
-      if (response === 'granted') {
-        startTapDetection();
-      } else {
-        alert('加速度センサーの使用が許可されませんでした');
+      if (totalAcc > 15) {  // トントン判定
+        const now = Date.now();
+        if (now - lastShake > 2000) {  // 2秒以上空いたら
+          // 周囲音量を取得
+          analyser.getByteFrequencyData(dataArray);
+          let avg = dataArray.reduce((a,b)=>a+b,0)/dataArray.length;
+          if (avg < 10) { // 静かになったら反応
+            lastShake = now;
+            audios[audioIndex].play();
+            audioIndex = (audioIndex + 1) % audios.length;
+          }
+        }
       }
-    } catch(e) {
-      console.error(e);
-    }
+    });
+
   } else {
-    startTapDetection(); // AndroidやiOS13未満
+    alert('マイクが使えません');
   }
-}
 
-startBtn.addEventListener('click', requestMotionPermission);
+  startBtn.disabled = true;
+  startBtn.textContent = "実験中…";
+});
 </script>
 </body>
 </html>
+
 
