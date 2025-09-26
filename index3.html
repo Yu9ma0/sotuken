@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>トントンリマインド</title>
+<title>トントン自然リマインド</title>
 </head>
 <body>
 <h1>トントンで自然リマインド</h1>
-<p>スマホを軽く机に置き、トントンしてみてください。</p>
+<p>スマホを軽く机に置き、トントンしてください。</p>
 
 <button id="startTap">トントン開始</button>
 
@@ -20,7 +20,8 @@ const startBtn = document.getElementById('startTap');
 const audio = document.getElementById('remindAudio');
 let audioAllowed = false;
 
-startBtn.addEventListener('click', () => {
+// トントン検知開始
+function startTapDetection() {
   if (window.DeviceMotionEvent) {
     alert('スマホをトントンしてください。音声リマインドが流れます。');
     audioAllowed = true;
@@ -29,7 +30,7 @@ startBtn.addEventListener('click', () => {
       const acc = event.accelerationIncludingGravity;
       const totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
       
-      if (totalAcc > 12 && audioAllowed) { // 衝撃の閾値
+      if (totalAcc > 8 && audioAllowed) { // 閾値を軽く調整
         audioAllowed = false;
         detectSilenceAndPlay();
       }
@@ -37,30 +38,56 @@ startBtn.addEventListener('click', () => {
   } else {
     alert('このブラウザは加速度センサーに対応していません');
   }
-});
-
-async function detectSilenceAndPlay() {
-  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const source = audioCtx.createMediaStreamSource(stream);
-  const analyser = audioCtx.createAnalyser();
-  source.connect(analyser);
-  analyser.fftSize = 256;
-  const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-  function checkSilence() {
-    analyser.getByteFrequencyData(dataArray);
-    const avg = dataArray.reduce((a,b) => a+b)/dataArray.length;
-    if (avg < 5) { // 無音判定
-      audio.play();
-      alert('📸 写真撮ろう！');
-      stream.getTracks().forEach(track => track.stop());
-    } else {
-      requestAnimationFrame(checkSilence);
-    }
-  }
-  checkSilence();
 }
+
+// 会話間（無音）判定
+async function detectSilenceAndPlay() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+    source.connect(analyser);
+    analyser.fftSize = 256;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    function checkSilence() {
+      analyser.getByteFrequencyData(dataArray);
+      const avg = dataArray.reduce((a,b) => a+b)/dataArray.length;
+      if (avg < 5) { // 無音判定
+        audio.play();
+        alert('📸 写真撮ろう！');
+        stream.getTracks().forEach(track => track.stop());
+      } else {
+        requestAnimationFrame(checkSilence);
+      }
+    }
+    checkSilence();
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+// iOS13+ 用の権限リクエスト
+async function requestMotionPermission() {
+  if (typeof DeviceMotionEvent.requestPermission === 'function') {
+    try {
+      const response = await DeviceMotionEvent.requestPermission();
+      if (response === 'granted') {
+        startTapDetection();
+      } else {
+        alert('加速度センサーの使用が許可されませんでした');
+      }
+    } catch(e) {
+      console.error(e);
+    }
+  } else {
+    startTapDetection(); // AndroidやiOS13未満
+  }
+}
+
+startBtn.addEventListener('click', requestMotionPermission);
 </script>
 </body>
 </html>
+
