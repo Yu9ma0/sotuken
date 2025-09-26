@@ -3,25 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>自然リマインドプロトタイプ</title>
+<title>トントンリマインド</title>
 </head>
 <body>
-<h1>自然リマインド実験</h1>
-<p>スマホをNFCタグにかざす前にボタンを押してください。</p>
+<h1>トントンで自然リマインド</h1>
+<p>スマホを軽く机に置き、トントンしてみてください。</p>
 
-<button id="startNFC">NFCスキャン開始</button>
+<button id="startTap">トントン開始</button>
 
 <audio id="remindAudio">
   <source src="bachan_friend.mp3" type="audio/mpeg">
 </audio>
 
 <script>
-const startBtn = document.getElementById('startNFC');
+const startBtn = document.getElementById('startTap');
 const audio = document.getElementById('remindAudio');
-
 let audioAllowed = false;
 
-// 会話間判定用
+startBtn.addEventListener('click', () => {
+  if (window.DeviceMotionEvent) {
+    alert('スマホをトントンしてください。音声リマインドが流れます。');
+    audioAllowed = true;
+
+    window.addEventListener('devicemotion', (event) => {
+      const acc = event.accelerationIncludingGravity;
+      const totalAcc = Math.sqrt(acc.x**2 + acc.y**2 + acc.z**2);
+      
+      if (totalAcc > 12 && audioAllowed) { // 衝撃の閾値
+        audioAllowed = false;
+        detectSilenceAndPlay();
+      }
+    });
+  } else {
+    alert('このブラウザは加速度センサーに対応していません');
+  }
+});
+
 async function detectSilenceAndPlay() {
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -34,10 +51,9 @@ async function detectSilenceAndPlay() {
   function checkSilence() {
     analyser.getByteFrequencyData(dataArray);
     const avg = dataArray.reduce((a,b) => a+b)/dataArray.length;
-    if (avg < 5 && audioAllowed) { // 簡易無音判定
+    if (avg < 5) { // 無音判定
       audio.play();
       alert('📸 写真撮ろう！');
-      audioAllowed = false;
       stream.getTracks().forEach(track => track.stop());
     } else {
       requestAnimationFrame(checkSilence);
@@ -45,30 +61,6 @@ async function detectSilenceAndPlay() {
   }
   checkSilence();
 }
-
-startBtn.addEventListener('click', async () => {
-  if ('NDEFReader' in window) {
-    try {
-      const ndef = new NDEFReader();
-      await ndef.scan();
-      alert('NFC読み取り中…タグにかざしてください');
-      
-      ndef.onreading = event => {
-        console.log('NFCタグ読み取り成功:', event.serialNumber);
-        // 会話間判定を開始
-        audioAllowed = true;
-        detectSilenceAndPlay();
-      };
-      
-    } catch(error) {
-      console.error('NFC読み取りエラー:', error);
-      alert('NFC読み取りエラー: ' + error);
-    }
-  } else {
-    alert('このブラウザはNFCに対応していません');
-  }
-});
 </script>
 </body>
 </html>
-
